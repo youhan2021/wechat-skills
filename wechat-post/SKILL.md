@@ -18,15 +18,17 @@ notes: |
   Step 3: wechat-post-image → 生成封面 + 配图 → 上传获取 media_id
   Step 4: 【用户确认图片】→ OK 才继续
   Step 5: wechat-formatter → 构建 HTML → 写入 draft.json
-  Step 6: 【格式确认】→ OK 才发草稿
+  Step 6: 【格式确认】→ OK 才继续
+  Step 6.5: wechat-score → 标题+封面综合打分（流量潜力）→ 必走，发草稿前最后一道闸
   Step 7: 直接调用 wechat API → create-draft
 
   每步都要等用户确认，禁止跳步
+  Step 6.5 必须执行：哪怕分数高，也要输出完整评分报告让用户看一眼；分低则必须回炉改标题或重做封面
 ---
 
 # 微信公众号文章发布总调度
 
-## 工作流程（7步，每步等确认）
+## 工作流程（7步+Step 6.5，每步等确认）
 
 ```
 Step 1: wechat-writer
@@ -55,6 +57,16 @@ Step 6: 【格式确认】
     - 把 HTML 草稿内容发给用户看（关键段落节选）
     - 用户确认 OK 才继续
     ↓
+Step 6.5: wechat-score 【发草稿前必走】
+    - 收集：标题 + 封面 + 目标读者（按本文受众推算）
+    - 调用 wechat-score 打分（七维 100 分制）
+    - 输出完整评分报告给用户
+    - 判定：
+        · ≥70 分（中高潜力及以上）→ 用户确认后进 Step 7
+        · 55-69（中等）→ 提示用户，可发可改
+        · <55（偏弱/很弱）→ 强制回炉（改标题 / 重做封面 / 都改）
+    - 用户可显式 override（如"我就发 60 分这个"），但必须留痕说"已知分低，按用户要求发"
+    ↓
 Step 7: 发草稿
     - 直接调用 wechat API: python3 ~/.hermes/skills/wechat-api-lite/scripts/wechat_api.py create-draft ~/.hermes/research/draft.json
     - 返回草稿 media_id 给用户
@@ -72,6 +84,7 @@ Step 7: 发草稿
 - `/wechat-writer` — 写作
 - `/wechat-post-image` — 图片
 - `/wechat-formatter` — 排版（只做 HTML 构建，不调用 API）
+- `/wechat-score` — 标题+封面流量潜力打分（Step 6.5 必走）
 
 ## 交付格式
 
